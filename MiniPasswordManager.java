@@ -18,27 +18,29 @@ public class MiniPasswordManager {
     dUserMap.put(username, ur);
   }
 
-  public static void remove(File dPwdFile, String username) throws IOException{
+  public static void remove(String pwdFile, String username) throws IOException{
+    dUserMap = HashedSaltedPasswordFile.load(pwdFile);
+    dPwdFile = pwdFile;
     try {
-      File tmp = File.createTempFile("tmp", "");
-      BufferedReader br = new BufferedReader(new FileReader(dPwdFile));
-      BufferedWriter bw = new BufferedWriter(new FileWriter(tmp));
+      FileReader fr = new FileReader(dPwdFile);
+      BufferedReader br = new BufferedReader(fr);
+      String currLine;
 
-      while(br.readLine() != null) {
-        if(br.readLine().contains(username)) {
-          bw.write("");
-        } else {
-          bw.write(br.readLine());
-        }
+      while((currLine = br.readLine()) != null) {
+        int delim = currLine.indexOf(HashedSaltedPasswordFile.DELIMITER_STR);
+        String uname = currLine.substring(0, delim);
+        HashedPasswordTuple ur =
+          new HashedPasswordTuple(currLine.substring(delim + 1));
+        dUserMap.remove(uname);
+        HashedPasswordFile.store(dPwdFile, dUserMap);
+        System.out.println("method");
       }
-      bw.close();
-      br.close();
-      dPwdFile = tmp;
-    } catch(Exception e) {
-
+    } catch (Exception e) {
+      System.out.println("Error "  + e);
     }
 
   }
+
   public static int chooseNewSalt() throws Exception {
     return getSecureRandom((int)Math.pow(2, 12));
   }
@@ -98,7 +100,9 @@ public class MiniPasswordManager {
       String password = br.readLine();
       add(userName, password);
       flush();
-
+      System.out.println("method");
+      remove(dPwdFile, userName);
+      System.out.println("method");
     } catch (Exception e) {
       if((pwdFile != null) && (userName != null)) {
           System.err.println("Error: Could not read or write " + pwdFile);
@@ -118,30 +122,31 @@ class HashedPasswordTuple {
   private String dHpwd;
   private int dSalt;
   public HashedPasswordTuple(String p, int s) {
-       dHpwd = p; dSalt = s;
+    dHpwd = p;
+    dSalt = s;
   }
 
   /** Constructs a HashedPasswordTuple pair from a line in
       the password file. */
   public HashedPasswordTuple(String line) throws Exception {
-       StringTokenizer st =
-            new StringTokenizer(line, HashedSaltedPasswordFile.DELIMITER_STR);
-       dHpwd = st.nextToken(); // hashed + salted password
-       dSalt = Integer.parseInt(st.nextToken()); // salt
+    StringTokenizer st =
+      new StringTokenizer(line, HashedSaltedPasswordFile.DELIMITER_STR);
+    dHpwd = st.nextToken(); // hashed + salted password
+    dSalt = Integer.parseInt(st.nextToken()); // salt
   }
 
   public String getHashedPassword() {
-       return dHpwd;
+    return dHpwd;
   }
 
   public int getSalt() {
-       return dSalt;
+    return dSalt;
   }
 
   /** returns a HashedPasswordTuple in string format so that it
       can be written to the password file. */
   public String toString () {
-       return (dHpwd + HashedSaltedPasswordFile.DELIMITER_STR + (""+dSalt));
+    return (dHpwd + HashedSaltedPasswordFile.DELIMITER_STR + (""+dSalt));
   }
 }
 
@@ -151,22 +156,22 @@ class HashedSaltedPasswordFile extends HashedPasswordFile {
   /* The load method overrides its parent.FN"s, as a salt also needs to be
      read from each line in the password file. */
   public static Hashtable load(String pwdFile) {
-       Hashtable userMap = new Hashtable();
-       try {
-            FileReader fr = new FileReader(pwdFile);
-            BufferedReader br = new BufferedReader(fr);
-            String line;
-            while ((line = br.readLine()) != null) {
-                 int delim = line.indexOf(DELIMITER_STR);
-                 String username=line.substring(0,delim);
-                 HashedPasswordTuple ur =
-                      new HashedPasswordTuple(line.substring(delim+1));
-                 userMap.put(username, ur);
-            }
-       } catch (Exception e) {
-            System.err.println ("Warning: Could not load password file.");
-       }
-       return userMap;
+    Hashtable userMap = new Hashtable();
+    try {
+      FileReader fr = new FileReader(pwdFile);
+      BufferedReader br = new BufferedReader(fr);
+      String line;
+      while ((line = br.readLine()) != null) {
+        int delim = line.indexOf(DELIMITER_STR);
+        String username=line.substring(0, delim);
+        HashedPasswordTuple ur =
+          new HashedPasswordTuple(line.substring(delim + 1));
+        userMap.put(username, ur);
+        }
+    } catch (Exception e) {
+      System.err.println ("Warning: Could not load password file.");
+    }
+      return userMap;
   }
 }
 
@@ -188,7 +193,7 @@ class HashedPasswordFile {
             while ((line = br.readLine()) != null) {
                  int delim = line.indexOf(DELIMITER_STR);
                  String username = line.substring(0, delim);
-                 String hpwd = line.substring(delim+1);
+                 String hpwd = line.substring(delim + 1);
                  userMap.put(username, hpwd);
             }
        } catch (Exception e) {
