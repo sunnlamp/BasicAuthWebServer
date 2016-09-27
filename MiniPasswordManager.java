@@ -31,9 +31,10 @@ public class MiniPasswordManager {
         String uname = currLine.substring(0, delim);
         HashedPasswordTuple ur =
           new HashedPasswordTuple(currLine.substring(delim + 1));
-        dUserMap.remove(uname);
-        HashedPasswordFile.store(dPwdFile, dUserMap);
-        System.out.println("method");
+          if(uname.contains(username)) {
+            dUserMap.remove(uname);
+            HashedPasswordFile.store(dPwdFile, dUserMap);
+          }
       }
     } catch (Exception e) {
       System.out.println("Error "  + e);
@@ -92,17 +93,27 @@ public class MiniPasswordManager {
     String userName = null;
     try {
       pwdFile = argv[0];
-      userName = argv[1];
       init(pwdFile);
-      System.out.print("Enter new password for " + userName + ": ");
+
+      System.out.print("Enter command: ");
       BufferedReader br =
         new BufferedReader(new InputStreamReader(System.in));
-      String password = br.readLine();
-      add(userName, password);
-      flush();
-      System.out.println("method");
-      remove(dPwdFile, userName);
-      System.out.println("method");
+      userName = br.readLine();
+
+      if(userName.equals("remove")) {
+        System.out.println("Enter user to remove: ");
+        userName = br.readLine();
+        remove(dPwdFile, userName);
+        System.out.println(userName + " removed.");
+        return;
+      } else if(userName.equals("add")) {
+        System.out.println("Please enter user: ");
+        userName = br.readLine();
+        System.out.println("Please enter password: ");
+        String password = br.readLine();
+        add(userName, password);
+        flush();
+      }
     } catch (Exception e) {
       if((pwdFile != null) && (userName != null)) {
           System.err.println("Error: Could not read or write " + pwdFile);
