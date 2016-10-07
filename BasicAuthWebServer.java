@@ -65,6 +65,7 @@ public class BasicAuthWebServer {
       if ((c != null) && (MiniPasswordManager.checkPassword(
                                             c.getUsername(),
                                             c.getPassword()))) {
+        System.out.println(c.getUsername() + " " + c.getPassword());
         serveFile(osw, pathname);
       } else {
         osw.write("HTTP/1.0 401 Unauthorized\n");
@@ -85,7 +86,9 @@ public class BasicAuthWebServer {
           StringTokenizer st = new StringTokenizer(header, " ");
           st.nextToken(); // skip "Authorization"
           st.nextToken(); // skip "Basic"
-          return new Credentials(st.nextToken());
+          String encoded = st.nextToken();
+          System.out.println(encoded);
+          return new Credentials(encoded);
         }
       }
     } catch (Exception e) {

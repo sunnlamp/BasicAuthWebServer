@@ -10,6 +10,8 @@ public class MiniPasswordManager {
 
   private static String dPwdFile;
 
+  private static String prePassword;
+
   public static void add(String username,
                          String password) throws Exception {
     int salt = chooseNewSalt();
@@ -99,7 +101,7 @@ public class MiniPasswordManager {
       BufferedReader br =
         new BufferedReader(new InputStreamReader(System.in));
       userName = br.readLine();
-
+      
       if(userName.equals("remove")) {
         System.out.println("Enter user to remove: ");
         userName = br.readLine();
